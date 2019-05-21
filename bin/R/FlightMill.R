@@ -17,10 +17,10 @@
 #Libraries --------------------------------------------------------------------
 library(magrittr)
 library(ggplot2)
-require(readr)  # for read_csv()
-require(dplyr)  # for mutate()
-require(tidyr)  # for unnest()
-require(purrr)  # for map(), reduce()
+library(readr)  
+library(dplyr)  
+library(tidyr)  
+library(purrr)  
 library(plyr)
 
 
@@ -46,7 +46,7 @@ files <- dir(pattern='*.TXT')
 
 df <- files %>% 
 		map_dfr(read_csv,col_names=FALSE)
-	#the header of these data is: time at sensor pass, difference between times, mill no.
+	#the header is: time at sensor pass, difference between times, mill no.
 		#at each X1, the insect has made a rotation
 		#each X2 indicates difference between the two
 
@@ -58,9 +58,6 @@ cuts <- round((nrow(df)/length(unique(df$ID))) * cut.perc,0)
 df<- df %>% 
 		group_by(ID) %>% 
 		slice(cuts:n())
-
-#Eliminate halts
-	#to do
 
 #Eliminate stretches when bee sat on sensor 
 df <- df[-which(df$X2 <= max.speed.err),]
@@ -93,8 +90,6 @@ mill.summary <- ddply(df , c("X3"), summarize,
 
 #Plotting Functions ---------------------------------------------------------
 
-
-#let's start with hot per year ----------------------
 p <- ggplot(df, aes(x = X1, y = speed,  group = 1)) +  
 		geom_line(size = 1.2) +
 		geom_point(aes(colour=factor(ID), 
