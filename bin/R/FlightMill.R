@@ -13,6 +13,7 @@
 	# average speed
 	#acceleration?
 
+#maybe? https://ademos.people.uic.edu/Chapter23.html
 
 #Libraries --------------------------------------------------------------------
 library(magrittr)
@@ -26,8 +27,11 @@ library(plyr)
 
 #Functions --------------------------------------------------------------------
 
-
-
+acceleration <- function(velocity = speed, time = X1){
+	acc <- (diff(velocity)/diff(time))
+	acc <- c(0,acc)
+	return(acc)
+	}
 
 
 
@@ -43,6 +47,8 @@ max.speed.err <- 0.23 #this is the maximum diff our sensor can detect
 	#will need to pipeline this to load many different datasets
 beeID <- read.table(bees,sep=',',header=T)
 files <- dir(pattern='*.TXT')
+files <- files[-c(1,2,3)]
+
 
 df <- files %>% 
 		map_dfr(read_csv,col_names=FALSE)
@@ -56,17 +62,26 @@ df <- merge(df, beeID, by = 'X3') #this'll need fixed, maybe. If an ID is missin
 #should probably eliminate the first few seconds as the bee aclimates and in case we hit the sensor
 cuts <- round((nrow(df)/length(unique(df$ID))) * cut.perc,0)
 df<- df %>% 
-		group_by(ID) %>% 
-		slice(cuts:n())
+	group_by(ID) %>% 
+	slice(cuts:n()) 
 
+
+# Estimate variables data -----------------------------------------------------
 #Eliminate stretches when bee sat on sensor 
-df <- df[-which(df$X2 <= max.speed.err),]
+df <- df[which(df$X2 > max.speed.err),]
 
 #Estimate speed
 circumf <- mill.diameter * pi
 df$speed <- circumf/ df$X2
 
+#calculate acceleration
+df<-df %>%
+  group_by(ID) %>%
+  mutate(acc = acceleration(speed, X1))
 
+
+#random filter
+df <- df[which(df$X1<200),]
 
 
 
@@ -90,14 +105,14 @@ mill.summary <- ddply(df , c("X3"), summarize,
 
 #Plotting Functions ---------------------------------------------------------
 
-p <- ggplot(df, aes(x = X1, y = speed,  group = 1)) +  
+p2 <- ggplot(df, aes(x = X1, y = speed,  group = 1)) +  
 		geom_line(size = 1.2) +
 		geom_point(aes(colour=factor(ID), 
-		fill = factor(ID)), shape=21, size = 2, colour = 'black') + 
+			fill = factor(ID)), shape=21, size = 2, colour = 'black') + 
 		scale_fill_brewer(palette = 3) +
 	#	scale_fill_manual(values=c("white", "black")) + #fix this for when there are 3+ drones
 	#	scale_colour_manual(values=c("black", "black")) + #fix this for when there are 3+ drones
-		facet_wrap(~ID, ncol=1) +
+		facet_wrap(~ID, ncol=1, scales = 'free_y') +
 		#scale_y_continuous(expand = c(0, 3)) +
 		theme_bw() +
 		 ylab("Speed (cm/s)")   +
@@ -121,9 +136,41 @@ p <- ggplot(df, aes(x = X1, y = speed,  group = 1)) +
 
 
 
-p
+p2
 
 
+p.acc <- ggplot(df, aes(x = X1, y = acc,  group = 1)) +  
+		geom_line(size = 1.2) +
+		geom_point(aes(colour=factor(ID), 
+			fill = factor(ID)), shape=21, size = 2, colour = 'black') + 
+		scale_fill_brewer(palette = 3) +
+	#	scale_fill_manual(values=c("white", "black")) + #fix this for when there are 3+ drones
+	#	scale_colour_manual(values=c("black", "black")) + #fix this for when there are 3+ drones
+		facet_wrap(~ID, ncol=1, scales = 'free_y') +
+		#scale_y_continuous(expand = c(0, 3)) +
+		theme_bw() +
+		 ylab("Acceleration (cm/s/s)")   +
+		 xlab("Time (s)")   +
+		theme(
+			text=element_text(size=12,  family="Helvetica", colour = 'black'),
+			strip.text.x = element_blank(),
+			#axis.text.x = element_text(angle = 45, hjust = 1),
+			#axis.title.x = element_blank(),
+			axis.title.y = element_text(size = 12),
+			axis.line.x = element_line(color="black", size = 0.5),
+			axis.line.y = element_line(color="black", size = 0.5),
+			#panel.grid.major = element_blank(),
+			panel.grid.minor = element_blank(),
+			panel.border = element_blank(),
+			strip.background = element_blank(),
+			panel.background = element_blank(),
+			legend.title=element_blank()
+
+	) 
+
+
+
+p.acc
 
 
 
