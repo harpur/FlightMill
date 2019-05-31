@@ -37,7 +37,7 @@ acceleration <- function(velocity = speed, time = X1){
 
 #Settings ---------------------------------------------------------------------
 #this should be loaded into the functions later
-mill.diameter <- 25.24125 #in cm
+#mill.diameter <- 25.24125 #in cm
 bees <- 'beeIDs' #this is a csv file of your design.
 cut.perc <- 0.05 #the front % of data to cut out before analyses begin
 max.speed.err <- 0.23 #this is the maximum diff our sensor can detect
@@ -46,8 +46,9 @@ max.speed.err <- 0.23 #this is the maximum diff our sensor can detect
 #Load data --------------------------------------------------------------------
 	#will need to pipeline this to load many different datasets
 beeID <- read.table(bees,sep=',',header=T)
+lengths <- read.table('length', sep=',', header=T)
 files <- dir(pattern='*.TXT')
-files <- files[-c(1,2,3)]
+#files <- files[c(8,9,10)]
 
 
 df <- files %>% 
@@ -58,6 +59,8 @@ df <- files %>%
 
 # Clean data ------------------------------------------------------------------
 df <- merge(df, beeID, by = 'X3') #this'll need fixed, maybe. If an ID is missing or wrong it'll get dropped. 
+df <- merge(df, lengths, by = 'X3') #this'll need fixed, maybe. If an ID is missing or wrong it'll get dropped. 
+
 
 #should probably eliminate the first few seconds as the bee aclimates and in case we hit the sensor
 cuts <- round((nrow(df)/length(unique(df$ID))) * cut.perc,0)
@@ -71,7 +74,8 @@ df<- df %>%
 df <- df[which(df$X2 > max.speed.err),]
 
 #Estimate speed
-circumf <- mill.diameter * pi
+#circumf <- mill.diameter * pi
+circumf <- df$len * pi
 df$speed <- circumf/ df$X2
 
 #calculate acceleration
@@ -80,8 +84,8 @@ df<-df %>%
   mutate(acc = acceleration(speed, X1))
 
 
-#random filter
-df <- df[which(df$X1<200),]
+#random filters
+#df <- df[which(df$X1<200),]
 
 
 
@@ -107,8 +111,8 @@ mill.summary <- ddply(df , c("X3"), summarize,
 
 p2 <- ggplot(df, aes(x = X1, y = speed,  group = 1)) +  
 		geom_line(size = 1.2) +
-		geom_point(aes(colour=factor(ID), 
-			fill = factor(ID)), shape=21, size = 2, colour = 'black') + 
+		geom_point(aes(colour=factor(X3), 
+			fill = factor(X3)), shape=21, size = 2, colour = 'black') + 
 		scale_fill_brewer(palette = 3) +
 	#	scale_fill_manual(values=c("white", "black")) + #fix this for when there are 3+ drones
 	#	scale_colour_manual(values=c("black", "black")) + #fix this for when there are 3+ drones
