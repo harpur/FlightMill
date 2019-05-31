@@ -71,7 +71,7 @@ df<- df %>%
 
 # Estimate variables data -----------------------------------------------------
 #Eliminate stretches when bee sat on sensor 
-df <- df[which(df$X2 > max.speed.err),]
+df <- df[which(df$X2 > max.speed.err),] 
 
 #Estimate speed
 #circumf <- mill.diameter * pi
@@ -91,8 +91,7 @@ df<-df %>%
 
 # Summarize for each individual bee -------------------------------------------
 	#this'll be a dplyr summarise to get individual ID
-
-mill.bee.summary <- ddply(df , c("ID"), summarize,
+bee.summary <- ddply(df , c("ID"), summarize,
 			mn.speed = mean(speed),
 			max.speed = max(speed),
 			distance = sum((X2) * (speed))
