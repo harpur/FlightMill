@@ -6,7 +6,7 @@ This repo contains information on how to operate the Harpur Lab's Arduino-based 
 
 
 ## About the software
-in bin/ you will find an R script, soon to be a package, for taking in data from our Bauer mills. The script assumes you're in a directory that contains files ending in .TXT and also contains files called 'beeIDs' and 'length'. 
+in /bin/R you will find an R script, soon to be a package, for taking in data from our Bauer mills. The script assumes you're in a directory that contains files ending in .TXT and also contains files called 'beeIDs' and 'length'. Examples are found in /data/
 
 It assumes **one drone per file**. If you have more than one drone per file, each new drone will begin at '0' and you can't currently use the 'beeIDs' file. 
 
